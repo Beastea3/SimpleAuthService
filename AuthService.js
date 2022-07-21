@@ -138,7 +138,6 @@ class AuthService {
       true
     );
     const isTokenValid = token.checkValidation();
-    console.log({ isTokenValid });
     if (!isTokenValid) {
       return new Error(Errors.TokenExpired);
     }
@@ -162,11 +161,10 @@ class AuthService {
       true
     );
     const isTokenValid = token.checkValidation();
-    console.log({ isTokenValid });
     if (!isTokenValid) {
       return new Error(Errors.TokenExpired);
     }
-    
+
     return this.#RoleStorage.list;
   }
 }

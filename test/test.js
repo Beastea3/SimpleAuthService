@@ -53,7 +53,6 @@ describe("test", function () {
     });
     it("user should have a developer role", function () {
       const res = authService.getUserById(1);
-      console.log(res);
       assert(res.roles.some((e) => e.name === "Developer"));
     });
 
@@ -97,7 +96,6 @@ describe("test", function () {
 
     it("should get all roles", function () {
       const res = authService.allRoles(secret);
-      console.log(res);
       assert(Array.isArray(res));
     });
   });
