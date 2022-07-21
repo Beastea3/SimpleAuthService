@@ -1,5 +1,16 @@
 const Errors = require("../types/Errors");
 
+const findLastIndexOf = (arr, condition) => {
+  let i = arr.length - 1;
+  while (i >= 0) {
+    if (condition(arr[i])) {
+      return i;
+    }
+    i -= 1;
+  }
+  return i;
+}
+
 class Storage {
   constructor(namespace) {
     this.list = [];
@@ -26,8 +37,13 @@ class Storage {
   }
 
   // Storage CRUD
-  getItemIndexByProperty(key, value) {
-    const itemIndex = this.list.findIndex((e) => (e[key] === value));
+  getItemIndexByProperty(key, value, last = false) {
+    let itemIndex;
+    if (last) {
+      itemIndex = findLastIndexOf(this.list, (e) => e[key] === value);
+    } else {
+      itemIndex = this.list.findIndex((e) => e[key] === value);
+    }
     if (itemIndex === -1) {
       throw new Error(`${this.namespace}-${Errors.NotFoundInStorage}`);
     }
@@ -35,8 +51,8 @@ class Storage {
     return itemIndex;
   }
 
-  getItemByProperty(key, value) {
-    const itemIndex = this.getItemIndexByProperty(key, value);
+  getItemByProperty(key, value, last = false) {
+    const itemIndex = this.getItemIndexByProperty(key, value, last);
     return this.list[itemIndex];
   }
 
@@ -69,14 +85,12 @@ class Storage {
     this.list.push(item);
     this.#increaseSequence();
     this.#updateTime();
-    console.log(this.list);
   }
 
   removeFromList(id) {
     const itemIndex = this.getItemIndexById(id);
     this.list.splice(itemIndex, 1);
     this.#updateTime();
-    console.log(this.list);
   }
 
   updateItemById(id, newOne) {

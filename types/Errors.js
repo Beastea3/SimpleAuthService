@@ -4,4 +4,5 @@ module.exports = {
   UserNotFound: "Service: User Not Found",
   RoleAlreadyExist: "Service: Role has already existed",
   RoleNotFound: "Service: Role Not Found",
+  TokenExpired: "Token has expired or invalidated",
 };

@@ -2,6 +2,7 @@ const Storage = require("./storage/AuthStorage");
 const Role = require("./types/Roles");
 const Errors = require("./types/Errors");
 const User = require("./types/User");
+const Token = require("./types/Token");
 
 const timeholder = new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -11,9 +12,9 @@ class AuthService {
   #RoleStorage;
 
   constructor() {
-    this.#UserStorage = new Storage('user');
-    this.#TokenStorage = new Storage('token');
-    this.#RoleStorage = new Storage('role');
+    this.#UserStorage = new Storage("user");
+    this.#TokenStorage = new Storage("token");
+    this.#RoleStorage = new Storage("role");
   }
 
   returnSuccess(msg = "") {
@@ -25,17 +26,11 @@ class AuthService {
   }
 
   #checkUserExistenceByName(userName) {
-    return this.#UserStorage.checkItemExistenceByProperty(
-      "name",
-      userName
-    )
+    return this.#UserStorage.checkItemExistenceByProperty("name", userName);
   }
 
   #checkRoleExistenceByName(roleName) {
-    return this.#RoleStorage.checkItemExistenceByProperty(
-      "name",
-      roleName
-    )
+    return this.#RoleStorage.checkItemExistenceByProperty("name", roleName);
   }
 
   createUser(userName, password) {
@@ -56,7 +51,7 @@ class AuthService {
       throw new Error(Errors.UserNotFound);
     }
 
-    const id = this.#UserStorage.getItemIdByProperty('name', userName);
+    const id = this.#UserStorage.getItemIdByProperty("name", userName);
 
     this.#UserStorage.removeFromList(id);
     return this.returnSuccess();
@@ -81,7 +76,7 @@ class AuthService {
       throw new Error(Errors.RoleNotFound);
     }
 
-    const id = this.#RoleStorage.getItemIdByProperty('name', roleName);
+    const id = this.#RoleStorage.getItemIdByProperty("name", roleName);
 
     this.#RoleStorage.removeFromList(id);
     return this.returnSuccess();
@@ -100,20 +95,79 @@ class AuthService {
     return this.#UserStorage.getItemById(id);
   }
 
-  async authenticate(userName, password) {
+  authenticate(userName, password, currentTime = Date.now()) {
     try {
-      const user = this.#UserStorage.getItemByProperty('name', userName);
+      const user = this.#UserStorage.getItemByProperty("name", userName);
       //TODO: Timing Attack Proof
       const res = user.checkPassword(password);
+
       if (!res) {
-        this.returnFailure();
+        return this.returnFailure();
       }
-      return this.returnSuccess();
+
+      const secret = user.generateSecret();
+
+      //TODO: Update If exists
+      const token = new Token(userName, secret, currentTime);
+      this.#TokenStorage.addToList(token);
+
+      return this.returnSuccess(secret);
     } catch (error) {
       console.log(error);
-      this.returnFailure();
+      return this.returnFailure();
+    }
+  }
+
+  invalidateToken(_token) {
+    try {
+      const token = this.#TokenStorage.getItemByProperty(
+        "tokenIdentifier",
+        _token
+      );
+      token.invalidate();
+      return this.returnFailure();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  checkRole(_token, role) {
+    const token = this.#TokenStorage.getItemByProperty(
+      "tokenIdentifier",
+      _token,
+      true
+    );
+    const isTokenValid = token.checkValidation();
+    console.log({ isTokenValid });
+    if (!isTokenValid) {
+      return new Error(Errors.TokenExpired);
+    }
+    const userName = token.assignee;
+
+    const user = this.#UserStorage.getItemByProperty("name", userName);
+
+    const hasRole = user.checkHasRole(role);
+
+    if (!hasRole) {
+      return false;
     }
 
+    return true;
+  }
+
+  allRoles(_token) {
+    const token = this.#TokenStorage.getItemByProperty(
+      "tokenIdentifier",
+      _token,
+      true
+    );
+    const isTokenValid = token.checkValidation();
+    console.log({ isTokenValid });
+    if (!isTokenValid) {
+      return new Error(Errors.TokenExpired);
+    }
+    
+    return this.#RoleStorage.list;
   }
 }
 

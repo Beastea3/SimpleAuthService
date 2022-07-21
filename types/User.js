@@ -19,6 +19,14 @@ class User {
       (e, i, a) => a.indexOf(e) === i
     );
   }
+
+  generateSecret() {
+    return md5(`${this.name}${Date.now()}`);
+  }
+
+  checkHasRole(roleName) {
+    return this.roles.some((e) => e.name === roleName);
+  }
 }
 
 module.exports = User;
