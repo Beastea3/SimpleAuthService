@@ -53,5 +53,10 @@ describe('test', function () {
       console.log(res);
       assert(res.roles.some((e) => e.name === 'Developer'));
     });
+
+    it('user should login smoothly', function () {
+      const res = authService.authenticate('Chris', '901920');
+      console.log(res);
+    });
   });
 });
