@@ -15,7 +15,6 @@ class Token {
       return false;
     }
     const now = Date.now();
-    console.log('asaaas', now, this.updatedTime + TOKEN_EXPIRE_IN)
     if (now < this.updatedTime + TOKEN_EXPIRE_IN) {
       return true;
     }
