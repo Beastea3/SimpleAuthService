@@ -1,3 +1,5 @@
+const Errors = require('../types/Errors');
+
 class Storage {
   constructor() {
     this.list = [];
@@ -15,19 +17,19 @@ class Storage {
 
   static filterIdProperty(item) {
     if (typeof item !== "object") {
-      throw new Error("Storage: invalid updating item");
+      throw new Error(Errors.NotFoundInStorage);
     }
     return Object.keys(item)
       .filter((e) => e !== "id")
       .reduce((acc, e) => Object.assign(acc, { [e]: item[e] }), {});
   }
 
-  //Storage CRUD
+  // Storage CRUD
   getItemIdByProperty(key, value) {
     const itemIndex = this.list.findIndex((e) => (e[key] = value));
 
     if (itemIndex === -1) {
-      return new Error("Storage: Item Not found");
+      return new Error();
     }
 
     return itemIndex;
