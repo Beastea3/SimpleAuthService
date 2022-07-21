@@ -22,4 +22,4 @@ class Token {
   }
 }
 
-module.export = Token;
+module.exports = Token;

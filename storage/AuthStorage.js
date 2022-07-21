@@ -1,10 +1,11 @@
-const Errors = require('../types/Errors');
+const Errors = require("../types/Errors");
 
 class Storage {
-  constructor() {
+  constructor(namespace) {
     this.list = [];
     this.sequence = 0;
     this.updateAt = Date.now();
+    this.namespace = namespace;
   }
 
   #updateTime() {
@@ -25,19 +26,42 @@ class Storage {
   }
 
   // Storage CRUD
-  getItemIdByProperty(key, value) {
-    const itemIndex = this.list.findIndex((e) => (e[key] = value));
-
+  getItemIndexByProperty(key, value) {
+    const itemIndex = this.list.findIndex((e) => (e[key] === value));
     if (itemIndex === -1) {
-      return new Error();
+      throw new Error(`${this.namespace}-${Errors.NotFoundInStorage}`);
     }
 
     return itemIndex;
   }
 
   getItemByProperty(key, value) {
-    this.getItemByProperty(key, value);
+    const itemIndex = this.getItemIndexByProperty(key, value);
     return this.list[itemIndex];
+  }
+
+  getItemIdByProperty(key, value) {
+    return this.getItemByProperty(key, value)?.id;
+  }
+
+  getItemById(id) {
+    return this.getItemByProperty("id", id);
+  }
+
+  getItemIndexById(id) {
+    return this.getItemIndexByProperty("id", id);
+  }
+
+  checkItemExistenceByProperty(key, value) {
+    try {
+      this.getItemIndexByProperty(key, value);
+      return true;
+    } catch (e) {
+      if (!e.message.includes(Errors.NotFoundInStorage)) {
+        throw e;
+      }
+      return false;
+    }
   }
 
   addToList(item) {
@@ -45,20 +69,22 @@ class Storage {
     this.list.push(item);
     this.#increaseSequence();
     this.#updateTime();
+    console.log(this.list);
   }
 
   removeFromList(id) {
-    const itemIndex = this.getItemIdByProperty("id", id);
+    const itemIndex = this.getItemIndexById(id);
     this.list.splice(itemIndex, 1);
     this.#updateTime();
+    console.log(this.list);
   }
 
   updateItemById(id, newOne) {
-    const index = this.getItemIdByProperty("id", id);
+    const index = this.getItemById(id);
     let itemToUpdate = this.list[index];
     this.list[index] = Object.assign(itemToUpdate, filterIdProperty(newOne));
     return this.list[index];
   }
 }
 
-module.export = AuthStorage;
+module.exports = Storage;
